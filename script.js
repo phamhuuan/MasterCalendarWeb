@@ -2,8 +2,12 @@ const date = new Date();
 const selectedDate = new Date();
 let selectedTab = 0;
 let isAdd = true;
+let selectedIndex = 0;
+let textAreaValue = '';
+let selectedRadio = 0;
+let selectedRadio2 = 0;
 // let noteList = "{\"Mon Dec 14 2020\":[\"a\",\"b\",\"c\"]}";
-let noteList;
+let noteList, eventList;
 try {
 	noteList = localStorage.getItem('noteList');
 	if (!noteList) {
@@ -11,6 +15,14 @@ try {
 	}
 } catch (error) {
 	noteList = JSON.stringify({});
+}
+try {
+	eventList = localStorage.getItem('eventList');
+	if (!eventList) {
+		eventList = JSON.stringify({});
+	}
+} catch (error) {
+	eventList = JSON.stringify({});
 }
 const renderCalendar = () => {
 	date.setDate(1);
@@ -107,7 +119,6 @@ const renderCalendar = () => {
 
 const renderNoteView = () => {
 	const noteEvent = document.querySelector(".note_event");
-	let noteList2 = JSON.parse(noteList);
 	let noteView = '';
 	noteView += `
 		<div class="tabBar">
@@ -120,29 +131,147 @@ const renderNoteView = () => {
 		</div>
 	`;
 	if (selectedTab === 0) {
+		let noteList2 = JSON.parse(noteList);
 		noteView += `<div class="noteList">`;
 		if (noteList2 && noteList2[selectedDate.toDateString()]) {
-			noteList2[selectedDate.toDateString()].forEach((item) => {
+			noteList2[selectedDate.toDateString()].forEach((item, index) => {
 				noteView += `<div class="noteEventItem">
 					<div class="noteEventIcon"></div>
-					<p class="noteEventText">${item.replace('\n', '<br>')}</p>
+					<p class="noteEventText">${item.split('\n').join('<br>')}</p>
+					<div class="noteEventControlView">
+						<div class="noteEventControlButton" onclick={editNote(${index})}>Edit</div>
+						<div class="noteEventControlButton" onclick={deleteNote(${index})}>Delete</div>
+					</div>
 				</div>`;
 			});
+		} else {
+			noteView += `<div class="noNoteView">You don't have any note</div>`
 		}
 		noteView += `</div>`;
 		if (isAdd) {
 			noteView += `<div class="addView">
-				<textarea class="addTextArea" id="addNoteArea"></textarea>
+				<textarea class="addTextArea" id="addNoteArea">${textAreaValue}</textarea>
 				<div class="controlView">
 					<div class="button" onclick={addNote()}>Add</div>
+				</div>
+			</div>`;
+		} else {
+			noteView += `<div class="addView">
+				<textarea class="addTextArea" id="addNoteArea"></textarea>
+				<div class="controlView">
+					<div class="button" onclick={saveNote()}>Save</div>
+					<div class="button" onclick={cancelEdit()}>Cancel</div>
 				</div>
 			</div>`;
 		}
 	}
 	if (selectedTab === 1) {
-		noteView += `<ul class="eventList"></ul>`;
+		let eventList2 = JSON.parse(eventList);
+		// eventList2 = {
+		// 	"14": {
+		// 		"-1": ["Day la event xuat hien vao ngay 14 hang thang"],
+		// 		"0": {
+		// 			"-1": ["Day la event xuat hien vao ngay 14 thang 1 hang nam"],
+		// 			"2021": ["Day la event chi xuat hien vao ngay 14 thang 1 nam 2021"],
+		// 		},
+		// 	},
+		// 	"D3": ["Day la event vao thu tu hang tuan"]
+		// };
+		noteView += `<div class="noteList">`;
+		if (eventList2) {
+			// hien thi event lap lai theo nam
+			if (eventList2[selectedDate.getDate()] && eventList2[selectedDate.getDate()][selectedDate.getMonth()] && eventList2[selectedDate.getDate()][selectedDate.getMonth()][-1]) {
+				eventList2[selectedDate.getDate()][selectedDate.getMonth()][-1].forEach((item, index) => {
+					noteView += `<div class="noteEventItem">
+						<div class="noteEventIcon"></div>
+						<p class="noteEventText">${item.split('\n').join('<br>')}</p>
+						<div class="noteEventControlView">
+							<div class="noteEventControlButton" onclick={editEvent(${index},${3})}>Edit</div>
+							<div class="noteEventControlButton" onclick={deleteEvent(${index},${3})}>Delete</div>
+						</div>
+					</div>`;
+				});
+			}
+			// hien thi event lap lai theo thang
+			if (eventList2[selectedDate.getDate()] && eventList2[selectedDate.getDate()][-1]) {
+				eventList2[selectedDate.getDate()][-1].forEach((item, index) => {
+					noteView += `<div class="noteEventItem">
+						<div class="noteEventIcon"></div>
+						<p class="noteEventText">${item.split('\n').join('<br>')}</p>
+						<div class="noteEventControlView">
+							<div class="noteEventControlButton" onclick={editEvent(${index},${2})}>Edit</div>
+							<div class="noteEventControlButton" onclick={deleteEvent(${index},${2})}>Delete</div>
+						</div>
+					</div>`;
+				});
+			}
+			// hien thi event lap lai theo thu
+			if (eventList2['D' + selectedDate.getDay()]) {
+				eventList2['D' + selectedDate.getDay()].forEach((item, index) => {
+					noteView += `<div class="noteEventItem">
+						<div class="noteEventIcon"></div>
+						<p class="noteEventText">${item.split('\n').join('<br>')}</p>
+						<div class="noteEventControlView">
+							<div class="noteEventControlButton" onclick={editEvent(${index},${1})}>Edit</div>
+							<div class="noteEventControlButton" onclick={deleteEvent(${index},${1})}>Delete</div>
+						</div>
+					</div>`;
+				});
+			}
+			// hien thi event khong lap lai
+			if (eventList2[selectedDate.getDate()] && eventList2[selectedDate.getDate()][selectedDate.getMonth()] && eventList2[selectedDate.getDate()][selectedDate.getMonth()][selectedDate.getFullYear()]) {
+				eventList2[selectedDate.getDate()][selectedDate.getMonth()][selectedDate.getFullYear()].forEach((item, index) => {
+					noteView += `<div class="noteEventItem">
+						<div class="noteEventIcon"></div>
+						<p class="noteEventText">${item.split('\n').join('<br>')}</p>
+						<div class="noteEventControlView">
+							<div class="noteEventControlButton" onclick={editEvent(${index},${0})}>Edit</div>
+							<div class="noteEventControlButton" onclick={deleteEvent(${index},${0})}>Delete</div>
+						</div>
+					</div>`;
+				});
+			}
+		} else {
+			noteView += `<div class="noNoteView">You don't have any event</div>`
+		}
+		noteView += `</div>`;
+		noteView += `<div class="radio">
+			<label class="radioContainer" onclick={setType(0)}>No repeat
+				<input type="radio" ${selectedRadio === 0 ? 'checked="checked"' : ""}" name="radio">
+				<span class="checkmark"></span>
+			</label>
+			<label class="radioContainer" onclick={setType(1)}>Every week
+				<input type="radio" ${selectedRadio === 1 ? 'checked="checked"' : ""}" name="radio">
+				<span class="checkmark"></span>
+			</label>
+			<label class="radioContainer" onclick={setType(2)}>Every month
+				<input type="radio" ${selectedRadio === 2 ? 'checked="checked"' : ""}" name="radio">
+				<span class="checkmark"></span>
+			</label>
+			<label class="radioContainer" onclick={setType(3)}>Every year
+				<input type="radio" ${selectedRadio === 3 ? 'checked="checked"' : ""}" name="radio">
+				<span class="checkmark"></span>
+			</label>	
+		</div>`;
+		if (isAdd) {
+			noteView += `<div class="addView">
+				<textarea class="addTextArea" id="addNoteArea">${textAreaValue}</textarea>
+				<div class="controlView">
+					<div class="button" onclick={addEvent()}>Add</div>
+				</div>
+			</div>`;
+		} else {
+			noteView += `<div class="addView">
+				<textarea class="addTextArea" id="addNoteArea"></textarea>
+				<div class="controlView">
+					<div class="button" onclick={saveEvent()}>Save</div>
+					<div class="button" onclick={cancelEdit()}>Cancel</div>
+				</div>
+			</div>`;
+		}
 	}
 	noteEvent.innerHTML = noteView;
+	document.getElementById('addNoteArea').value = textAreaValue;
 };
 
 document.querySelector(".prev").addEventListener("click", () => {
@@ -212,6 +341,12 @@ document.addEventListener("keydown", (e) => {
 				}
 				setSelectDate(tempDate.getTime());
 				break;
+			case "Enter":
+				document.getElementById('note_event').style.display = 'flex';
+				break;
+			case "Escape":
+				document.getElementById('note_event').style.display = 'none';
+				break;
 			default:
 				break;
 		}
@@ -220,11 +355,14 @@ document.addEventListener("keydown", (e) => {
 
 const setSelectDate = (newDate) => {
 	newDate = new Date(newDate);
+	textAreaValue = '';
+	isAdd = true;
 	selectedDate.setDate(newDate.getDate());
 	selectedDate.setMonth(newDate.getMonth());
 	date.setMonth(newDate.getMonth());
 	selectedDate.setFullYear(newDate.getFullYear());
 	date.setFullYear(newDate.getFullYear());
+	selectedRadio = 0;
 	renderCalendar();
 	renderNoteView();
 }
@@ -232,6 +370,10 @@ const setSelectDate = (newDate) => {
 const setSelectedTab = (tab) => {
 	selectedTab = tab;
 	renderNoteView();
+}
+
+const setType = (number) => {
+	selectedRadio = number;
 }
 
 const addNote = () => {
@@ -244,12 +386,228 @@ const addNote = () => {
 			noteList2[selectedDate.toDateString()].push(noteArea.value.trim());
 		}
 		noteList = JSON.stringify(noteList2);
+		noteArea.value = '';
 		try {
 			localStorage.setItem('noteList', noteList);
 		} catch (error) {}
-		renderCalendar();
 		renderNoteView();
 	}
+};
+
+const addEvent = (notRender) => {
+	const eventArea = document.getElementById('addNoteArea');
+	if (eventArea.value.trim() !== '') {
+		let eventList2 = JSON.parse(eventList);
+		if (selectedRadio === 0) {
+			if (eventList2[selectedDate.getDate()]) {
+				if (eventList2[selectedDate.getDate()][selectedDate.getMonth()]) {
+					if (eventList2[selectedDate.getDate()][selectedDate.getMonth()][selectedDate.getFullYear()]) {
+						eventList2[selectedDate.getDate()][selectedDate.getMonth()][selectedDate.getFullYear()].push(eventArea.value.trim());
+					} else {
+						eventList2[selectedDate.getDate()][selectedDate.getMonth()][selectedDate.getFullYear()] = [eventArea.value.trim()];
+					}
+				} else {
+					eventList2[selectedDate.getDate()][selectedDate.getMonth()] = {};
+					eventList2[selectedDate.getDate()][selectedDate.getMonth()][selectedDate.getFullYear()] = [eventArea.value.trim()];
+				}
+			} else {
+				eventList2[selectedDate.getDate()] = {};
+				eventList2[selectedDate.getDate()][selectedDate.getMonth()] = {};
+				eventList2[selectedDate.getDate()][selectedDate.getMonth()][selectedDate.getFullYear()] = [eventArea.value.trim()];
+			}
+		} else if (selectedRadio === 1) {
+			if (eventList2['D' + selectedDate.getDay()]) {
+				eventList2['D' + selectedDate.getDay()].push(eventArea.value.trim());
+			} else {
+				eventList2['D' + selectedDate.getDay()] = [eventArea.value.trim()];
+			}
+		} else if (selectedRadio === 2) {
+			if (eventList2[selectedDate.getDate()]) {
+				if (eventList2[selectedDate.getDate()][-1]) {
+					eventList2[selectedDate.getDate()][-1].push(eventArea.value.trim());
+				} else {
+					eventList2[selectedDate.getDate()][-1] = [eventArea.value.trim()];
+				}
+			} else {
+				eventList2[selectedDate.getDate()] = {};
+				eventList2[selectedDate.getDate()][-1] = [eventArea.value.trim()];
+			}
+		} else if (selectedRadio === 3) {
+			if (eventList2[selectedDate.getDate()]) {
+				if (eventList2[selectedDate.getDate()][selectedDate.getMonth()]) {
+					if (eventList2[selectedDate.getDate()][selectedDate.getMonth()][-1]) {
+						eventList2[selectedDate.getDate()][selectedDate.getMonth()][-1].push(eventArea.value.trim());
+					} else {
+						eventList2[selectedDate.getDate()][selectedDate.getMonth()][-1] = [eventArea.value.trim()];
+					}
+				} else {
+					eventList2[selectedDate.getDate()][selectedDate.getMonth()] = {};
+					eventList2[selectedDate.getDate()][selectedDate.getMonth()][-1] = [eventArea.value.trim()];
+				}
+			} else {
+				eventList2[selectedDate.getDate()] = {};
+				eventList2[selectedDate.getDate()][selectedDate.getMonth()] = {};
+				eventList2[selectedDate.getDate()][selectedDate.getMonth()][-1] = [eventArea.value.trim()];
+			}
+		}
+		eventList = JSON.stringify(eventList2);
+		eventArea.value = '';
+		try {
+			localStorage.setItem('eventList', eventList);
+		} catch (error) {}
+		if (notRender === true) {
+		} else {
+			renderNoteView();
+		}
+	}
+}
+
+const editNote = (index) => {
+	let noteList2 = JSON.parse(noteList);
+	textAreaValue = noteList2[selectedDate.toDateString()][index];
+	isAdd = false;
+	selectedIndex = index;
+	renderNoteView();
+};
+
+const editEvent = (index, type) => {
+	let eventList2 = JSON.parse(eventList);
+	if (type === 0) {
+		textAreaValue = eventList2[selectedDate.getDate()][selectedDate.getMonth()][selectedDate.getFullYear()][index];
+	} else if (type === 1) {
+		textAreaValue = eventList2['D' + selectedDate.getDay()][index];
+	} else if (type === 2) {
+		textAreaValue = eventList2[selectedDate.getDate()][-1][index];
+	} else if (type === 3) {
+		textAreaValue = eventList2[selectedDate.getDate()][selectedDate.getMonth()][-1][index];
+	}
+	selectedIndex = index;
+	selectedRadio = type;
+	selectedRadio2 = type;
+	isAdd = false;
+	renderNoteView();
+}
+
+const saveNote = () => {
+	const noteArea = document.getElementById('addNoteArea');
+	if (noteArea.value.trim() !== '') {
+		let noteList2 = JSON.parse(noteList);
+		noteList2[selectedDate.toDateString()][selectedIndex] = noteArea.value.trim();
+		noteList = JSON.stringify(noteList2);
+		isAdd = true;
+		noteArea.value = '';
+		textAreaValue = '';
+		try {
+			localStorage.setItem('noteList', noteList);
+		} catch (error) {}
+		renderNoteView();
+	}
+};
+
+const saveEvent = () => {
+	const eventArea = document.getElementById('addNoteArea');
+	if (eventArea.value.trim() !== '') {
+		let eventList2 = JSON.parse(eventList);
+		if (selectedRadio === selectedRadio2) {
+			if (selectedRadio === 0) {
+				eventList2[selectedDate.getDate()][selectedDate.getMonth()][selectedDate.getFullYear()][selectedIndex] = eventArea.value.trim();
+			} else if (selectedRadio === 1) {
+				eventList2['D' + selectedDate.getDay()][selectedIndex] = eventArea.value.trim();
+			} else if (selectedRadio === 2) {
+				eventList2[selectedDate.getDate()][-1][selectedIndex] = eventArea.value.trim();
+			} else if (selectedRadio === 3) {
+				eventList2[selectedDate.getDate()][selectedDate.getMonth()][-1][selectedIndex] = eventArea.value.trim();
+			}
+			eventList = JSON.stringify(eventList2);
+		} else {
+			eventList = JSON.stringify(eventList2);
+			deleteEvent(selectedIndex, selectedRadio2, true);
+			addEvent(true);
+		}
+		eventArea.value = '';
+		textAreaValue = '';
+		isAdd = true;
+		try {
+			localStorage.setItem('eventList', eventList);
+		} catch (error) {}
+		renderNoteView();
+	}
+};
+
+const deleteNote = (index) => {
+	let noteList2 = JSON.parse(noteList);
+	if (noteList2[selectedDate.toDateString()].length === 1) {
+		delete noteList2[selectedDate.toDateString()];
+	} else {
+		noteList2[selectedDate.toDateString()].splice(index, 1);
+	}
+	noteList = JSON.stringify(noteList2);
+	isAdd = true;
+	try {
+		localStorage.setItem('noteList', noteList);
+	} catch (error) {}
+	renderNoteView();
+};
+
+const deleteEvent = (index, type, notRender) => {
+	let eventList2 = JSON.parse(eventList);
+	if (type === 0) {
+		if (eventList2[selectedDate.getDate()][selectedDate.getMonth()][selectedDate.getFullYear()].length === 1) {
+			delete eventList2[selectedDate.getDate()][selectedDate.getMonth()][selectedDate.getFullYear()];
+			if (JSON.stringify(eventList2[selectedDate.getDate()][selectedDate.getMonth()]) === '{}') {
+				delete eventList2[selectedDate.getDate()][selectedDate.getMonth()];
+				if (JSON.stringify(eventList2[selectedDate.getDate()]) === '{}') {
+					delete eventList2[selectedDate.getDate()];
+				}
+			}
+		} else {
+			eventList2[selectedDate.getDate()][selectedDate.getMonth()][selectedDate.getFullYear()].splice(index, 1);
+		}
+	} else if (type === 1) {
+		if (eventList2['D' + selectedDate.getDay()].length === 1) {
+			delete eventList2['D' + selectedDate.getDay()];
+		} else {
+			eventList2['D' + selectedDate.getDay()].splice(index, 1);
+		}
+	} else if (type === 2) {
+		if (eventList2[selectedDate.getDate()][-1].length === 1) {
+			delete eventList2[selectedDate.getDate()][-1];
+			if (JSON.stringify(eventList2[selectedDate.getDate()]) === '{}') {
+				delete eventList2[selectedDate.getDate()];
+			}
+		} else {
+			eventList2[selectedDate.getDate()][-1].splice(index, 1);
+		}
+	} else if (type === 3) {
+		if (eventList2[selectedDate.getDate()][selectedDate.getMonth()][-1].length === 1) {
+			delete eventList2[selectedDate.getDate()][selectedDate.getMonth()][-1];
+			if (JSON.stringify(eventList2[selectedDate.getDate()][selectedDate.getMonth()]) === '{}') {
+				delete eventList2[selectedDate.getDate()][selectedDate.getMonth()];
+				if (JSON.stringify(eventList2[selectedDate.getDate()]) === '{}') {
+					delete eventList2[selectedDate.getDate()];
+				}
+			}
+		} else {
+			eventList2[selectedDate.getDate()][selectedDate.getMonth()][-1].splice(index, 1);
+		}
+	}
+	isAdd = true;
+	eventList = JSON.stringify(eventList2);
+	try {
+		localStorage.setItem('eventList', eventList);
+	} catch (error) {}
+	if (notRender === true) {
+	} else {
+		renderNoteView();
+	}
+}
+
+const cancelEdit = () => {
+	const noteArea = document.getElementById('addNoteArea');
+	isAdd = true;
+	noteArea.value = '';
+	textAreaValue = '';
+	renderNoteView();
 }
 
 renderCalendar();
