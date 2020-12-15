@@ -372,7 +372,7 @@ document.addEventListener("keydown", (e) => {
 			case "Escape":
 				document.getElementById('note_event').style.display = 'none';
 				break;
-			case "Tab":
+			case "Space":
 				if (document.getElementById('note_event').style.display === 'flex') {
 					document.getElementById('addNoteArea').focus();
 				}
