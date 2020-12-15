@@ -46,20 +46,26 @@ html {
 	position: absolute;
 	top: 10px;
 	left: 10px;
-	z-index: 1;
+	z-index: 2;
 	user-select: none;
+}
+
+.questionIconView:hover .useage {
+	display: flex;
+	z-index: 3;
 }
 
 .questionIcon {
 	font-size: 40px;
-	color: #eee;
+	color: #167e56;
 }
 
 .useage {
 	position: absolute;
 	top: 10px;
 	left: 10px;
-	z-index: 1;
+	z-index: -1;
+	/* display: none; */
 	user-select: none;
 }
 
@@ -157,7 +163,7 @@ html {
 }
 
 .days div {
-	font-size: 1.4rem;
+	font-size: 1.6rem;
 	margin: 0.3rem;
 	width: calc(40.2rem / 7);
 	height: 5rem;
@@ -172,6 +178,33 @@ html {
 	background-color: #262626;
 	border: 0.2rem solid #777;
 	cursor: pointer;
+}
+
+.days div:hover .dot2 {
+	bottom: 2px;
+}
+
+.days div:hover .lunarDate2 {
+	top: 1px;
+	right: 2px;
+}
+
+.lunarDate {
+	position: absolute;
+	top: 2px;
+	right: 2px;
+	z-index: 1;
+	font-size: xx-small;
+	background-color: transparent;
+}
+
+.lunarDate2 {
+	position: absolute;
+	top: 3px;
+	right: 4px;
+	z-index: 1;
+	font-size: x-small;
+	background-color: transparent;
 }
 
 .date {
@@ -405,7 +438,7 @@ html {
 	background: white;
 }
 
-#dot {
+.dot {
 	width: 8px;
 	height: 8px;
 	border-radius: 4px;
@@ -416,11 +449,11 @@ html {
 	background-color: #167e56;
 }
 
-#dot2 {
+.dot2 {
 	width: 8px;
 	height: 8px;
 	border-radius: 4px;
-	bottom: 0px;
+	bottom: 4px;
 	margin-left: -0px;
 	position: absolute;
 	z-index: 1;
