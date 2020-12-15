@@ -83,7 +83,9 @@ const renderCalendar = () => {
 		} else {
 			currentDate = new Date(year, month - 1, prevLastDay - x + 1).getTime();
 		}
-		days += `<div onclick={setSelectDate(${currentDate})} class="prev-date">${prevLastDay - x + 1}</div>`;
+		days += `<div onclick={setSelectDate(${currentDate})} class="prev-date">
+			${prevLastDay - x + 1}
+		</div>`;
 	}
 	for (let i = 1; i <= lastDay; i++) {
 		currentDate = new Date(year, month, i).getTime();
@@ -92,16 +94,39 @@ const renderCalendar = () => {
 			month === new Date().getMonth() &&
 			year === new Date().getFullYear()
 		) {
-			days += `<div onclick={setSelectDate(${currentDate})} class="today">${i}</div>`;
+			days += `<div ondblclick={handleDoubleClick(${currentDate})} onclick={setSelectDate(${currentDate})} class="today">
+				${i}
+			</div>`;
 		} else {
+			let noteList2 = JSON.parse(noteList);
+			let eventList2 = JSON.parse(eventList);
+			let hasNote = false;
+			let thisDay = new Date(year, month, i);
+			if (noteList2[thisDay.toDateString()]) {
+				hasNote = true;
+			} else if (eventList2['D' + thisDay.getDay()]) {
+				hasNote = true;
+			} else if (eventList2[thisDay.getDate()] && eventList2[thisDay.getDate()][-1]) {
+				hasNote = true;
+			} else if (eventList2[thisDay.getDate()] && eventList2[thisDay.getDate()][thisDay.getMonth()] && eventList2[thisDay.getDate()][thisDay.getMonth()][-1]) {
+				hasNote = true;
+			} else if (eventList2[thisDay.getDate()] && eventList2[thisDay.getDate()][thisDay.getMonth()] && eventList2[thisDay.getDate()][thisDay.getMonth()][thisDay.getFullYear()]) {
+				hasNote = true;
+			}
 			if (
 				i === selectedDate.getDate() &&
 				month === selectedDate.getMonth() &&
 				year === selectedDate.getFullYear()
 			) {
-				days += `<div onclick={setSelectDate(${currentDate})} class="otherDay selectedDay">${i}</div>`;
+				days += `<div ondblclick={handleDoubleClick(${currentDate})} onclick={setSelectDate(${currentDate})} class="otherDay selectedDay">
+					${i}
+					${hasNote ? '<div id="dot2"></div>' : ''}
+				</div>`;
 			} else {
-				days += `<div onclick={setSelectDate(${currentDate})} class="otherDay">${i}</div>`;
+				days += `<div ondblclick={handleDoubleClick(${currentDate})} onclick={setSelectDate(${currentDate})} class="otherDay">
+					${i}
+					${hasNote ? '<div id="dot"></div>' : ''}
+				</div>`;
 			}
 		}
 	}
@@ -167,18 +192,8 @@ const renderNoteView = () => {
 	}
 	if (selectedTab === 1) {
 		let eventList2 = JSON.parse(eventList);
-		// eventList2 = {
-		// 	"14": {
-		// 		"-1": ["Day la event xuat hien vao ngay 14 hang thang"],
-		// 		"0": {
-		// 			"-1": ["Day la event xuat hien vao ngay 14 thang 1 hang nam"],
-		// 			"2021": ["Day la event chi xuat hien vao ngay 14 thang 1 nam 2021"],
-		// 		},
-		// 	},
-		// 	"D3": ["Day la event vao thu tu hang tuan"]
-		// };
 		noteView += `<div class="noteList">`;
-		if (eventList2) {
+		if (eventList !== '{}') {
 			// hien thi event lap lai theo nam
 			if (eventList2[selectedDate.getDate()] && eventList2[selectedDate.getDate()][selectedDate.getMonth()] && eventList2[selectedDate.getDate()][selectedDate.getMonth()][-1]) {
 				eventList2[selectedDate.getDate()][selectedDate.getMonth()][-1].forEach((item, index) => {
@@ -341,12 +356,35 @@ document.addEventListener("keydown", (e) => {
 				}
 				setSelectDate(tempDate.getTime());
 				break;
+			case "KeyN":
+				document.getElementById('note_event').style.display = 'flex';
+				selectedTab = 0;
+				renderNoteView();
+				break;
+			case "KeyE":
+				document.getElementById('note_event').style.display = 'flex';
+				selectedTab = 1;
+				renderNoteView();
+				break;
 			case "Enter":
 				document.getElementById('note_event').style.display = 'flex';
 				break;
 			case "Escape":
 				document.getElementById('note_event').style.display = 'none';
 				break;
+			case "Tab":
+				if (document.getElementById('note_event').style.display === 'flex') {
+					document.getElementById('addNoteArea').focus();
+				}
+			default:
+				break;
+		}
+	} else {
+		switch (e.code) {
+			case "Escape":
+				document.getElementById('addNoteArea').blur();
+				break;
+		
 			default:
 				break;
 		}
@@ -365,6 +403,11 @@ const setSelectDate = (newDate) => {
 	selectedRadio = 0;
 	renderCalendar();
 	renderNoteView();
+}
+
+const handleDoubleClick = (newDate) => {
+	document.getElementById('note_event').style.display = 'flex';
+	selectedDate(newDate);
 }
 
 const setSelectedTab = (tab) => {
@@ -391,6 +434,7 @@ const addNote = () => {
 			localStorage.setItem('noteList', noteList);
 		} catch (error) {}
 		renderNoteView();
+		renderCalendar();
 	}
 };
 
@@ -458,6 +502,7 @@ const addEvent = (notRender) => {
 		if (notRender === true) {
 		} else {
 			renderNoteView();
+			renderCalendar();
 		}
 	}
 }
@@ -486,6 +531,7 @@ const editEvent = (index, type) => {
 	selectedRadio2 = type;
 	isAdd = false;
 	renderNoteView();
+	renderCalendar();
 }
 
 const saveNote = () => {
@@ -547,6 +593,7 @@ const deleteNote = (index) => {
 		localStorage.setItem('noteList', noteList);
 	} catch (error) {}
 	renderNoteView();
+	renderCalendar();
 };
 
 const deleteEvent = (index, type, notRender) => {
@@ -599,6 +646,7 @@ const deleteEvent = (index, type, notRender) => {
 	if (notRender === true) {
 	} else {
 		renderNoteView();
+		renderCalendar();
 	}
 }
 

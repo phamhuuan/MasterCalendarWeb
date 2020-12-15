@@ -88,7 +88,7 @@ html {
 }
 
 .note_event {
-	display: flex;
+	display: none;
 	position: relative;
 	flex-direction: column;
 	width: 45rem;
@@ -181,19 +181,23 @@ html {
 .prev-date,
 .next-date {
 	opacity: 0.5;
+	position: relative;
 	user-select: none;
 }
 
 .otherDay {
 	user-select: none;
+	position: relative;
 }
 
 .selectedDay {
 	border: 0.2rem solid #777;
+	position: relative;
 }
 
 .today {
 	background-color: #167e56;
+	position: relative;
 	user-select: none;
 }
 
@@ -399,6 +403,28 @@ html {
 	height: 8px;
 	border-radius: 50%;
 	background: white;
+}
+
+#dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 4px;
+	bottom: 2px;
+	margin-left: -0px;
+	position: absolute;
+	z-index: 1;
+	background-color: #167e56;
+}
+
+#dot2 {
+	width: 8px;
+	height: 8px;
+	border-radius: 4px;
+	bottom: 0px;
+	margin-left: -0px;
+	position: absolute;
+	z-index: 1;
+	background-color: #167e56;
 }
 
 @keyframes rotateScaleIn {
